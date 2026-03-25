@@ -31,7 +31,9 @@ jobs:
       - name: Checkout Self
         uses: actions/checkout@v4
       - name: Docker build
-        run: docker buildx build . --file cd bring_your_own_slm/src/phi-3-sidecar/Dockerfile --tag openaiapp:v1 
+        run: |
+          cd bring_your_own_slm/src/phi-3-sidecar/
+          docker  build . --tag openaiwebapp:v1 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name:  Install Docker BuildX
