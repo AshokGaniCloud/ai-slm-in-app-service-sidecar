@@ -66,9 +66,10 @@ jobs:
           username: ${{env.DOCKER_USERNAME}}
           password: ${{env.DOCKER_PASSWORD}}
       - name: Build Image And Push
+        working-directory: bring_your_own_slm/src/phi-3-sidecar/
         run: |
-           cd bring_your_own_slm/src/phi-3-sidecar/Dockerfile
-           docker buildx build  -t openaiapp:v1 . 
+           
+           docker build  -t openaiapp:v1 . 
            docker images
            docker tag openaiapp:v1 ashokgani6300/openaiapp:v1
            echo ${{ env.DOCKER_PASSWORD }} | docker login -u ${{ env.DOCKER_USERNAME }} --password-stdin docker.io
