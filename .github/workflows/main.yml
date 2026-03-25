@@ -1,0 +1,74 @@
+name: Build And Deploy ML Pipeline
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: ${{ github.repository }}
+  SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
+  COMPARE_TAG: latest
+  SYNK_TOKEN: '75323634-9882-4456-8ac3-60655dccb4c0'
+  DOCKER_USERNAME: 'ashokgani6300'
+  DOCKER_PASSWORD: 'AshokGani@6300'
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: write
+      actions: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout Self
+        uses: actions/checkout@v4
+      - name: Docker build
+        run: docker build . --file cd bring_your_own_slm/src/phi-3-sidecar/Dockerfile --tag openaiapp:v1 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name:  Install Docker BuildX
+        uses: docker/setup-buildx-action@v3.12.0
+        with:
+          driver-opts: |
+            image=moby/buildkit:v0.10.6
+ 
+      - name: Docker Login
+        uses: docker/login-action@v3.7.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{env.DOCKER_USERNAME}}
+          password: ${{env.DOCKER_PASSWORD}}
+      - name: Build Image And Push
+        run: |
+           cd bring_your_own_slm/src/phi-3-sidecar/Dockerfile
+           docker build  -t openaiapp:v1 . 
+           docker images
+           docker tag openaiapp:v1 ashokgani6300/openaiapp:v1
+           echo ${{ env.DOCKER_PASSWORD }} | docker login -u ${{ env.DOCKER_USERNAME }} --password-stdin docker.io
+           docker push ashokgani6300/openaiapp:v1
+        env:
+          DOCKER_CLI_ACI: 1
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ashokgani6300/mlapp
+      - name: Build and push new image
+        id: build-and-publish
+        uses: docker/build-push-action@v5
+        with:
+          context: ./bring_your_own_slm/src/phi-3-sidecar/Dockerfile/.
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      - name: Image digest
+        run: |
+          echo Image Digest Id is: ${{ steps.build-and-publish.outputs.digest }}
