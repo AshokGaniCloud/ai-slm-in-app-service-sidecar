@@ -30,6 +30,23 @@ jobs:
     steps:
       - name: Checkout Self
         uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install huggingface-cli
+        run: |
+          pip install --upgrade huggingface_hub
+
+      - name: Check CLI installation
+        run: |
+            hf --help
+      - name: Run hf Build Command
+        run: |
+           cd bring_your_own_slm/src/phi-3-sidecar 
+           hf download microsoft/Phi-3-mini-4k-instruct-onnx --local-dir ./Phi-3-mini-4k-instruct-onnx
+            
       - name: Docker build
         run: |
           cd bring_your_own_slm/src/phi-3-sidecar/
