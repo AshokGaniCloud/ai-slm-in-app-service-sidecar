@@ -31,7 +31,7 @@ jobs:
       - name: Checkout Self
         uses: actions/checkout@v4
       - name: Docker build
-        run: docker build . --file cd bring_your_own_slm/src/phi-3-sidecar/Dockerfile --tag openaiapp:v1 
+        run: docker buildx build . --file cd bring_your_own_slm/src/phi-3-sidecar/Dockerfile --tag openaiapp:v1 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name:  Install Docker BuildX
@@ -49,7 +49,7 @@ jobs:
       - name: Build Image And Push
         run: |
            cd bring_your_own_slm/src/phi-3-sidecar/Dockerfile
-           docker build  -t openaiapp:v1 . 
+           docker buildx build  -t openaiapp:v1 . 
            docker images
            docker tag openaiapp:v1 ashokgani6300/openaiapp:v1
            echo ${{ env.DOCKER_PASSWORD }} | docker login -u ${{ env.DOCKER_USERNAME }} --password-stdin docker.io
