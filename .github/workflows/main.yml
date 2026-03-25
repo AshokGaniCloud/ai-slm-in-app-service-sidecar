@@ -8,6 +8,9 @@ env:
   SYNK_TOKEN: '75323634-9882-4456-8ac3-60655dccb4c0'
   DOCKER_USERNAME: 'ashokgani6300'
   DOCKER_PASSWORD: 'AshokGani@6300'
+  REGISTRY_LOGIN_SERVER: 'openpiwebregistry.azurecr.io'
+  REGISTRY_USERNAME: 'openpiwebregistry'
+  REGISTRY_PASSWORD: '1PUV49QHgTdsTDurDUJPKEvMNJhaSYia0miY3lHwmK2zJQ6mJ37kJQQJ99CCACBsN54Eqg7NAAACAZCRp4bB'
 
 on:
   push:
@@ -66,10 +69,11 @@ jobs:
           username: ${{env.DOCKER_USERNAME}}
           password: ${{env.DOCKER_PASSWORD}}
       - name: Build Image And Push
-        working-directory: bring_your_own_slm/src/phi-3-sidecar/
         run: |
-           
+           cd bring_your_own_slm/src/phi-3-sidecar/
            docker build  -t openaiapp:v1 . 
+      - name: Check Images and Tag And Push
+        run: |
            docker images
            docker tag openaiapp:v1 ashokgani6300/openaiapp:v1
            echo ${{ env.DOCKER_PASSWORD }} | docker login -u ${{ env.DOCKER_USERNAME }} --password-stdin docker.io
@@ -81,11 +85,22 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ashokgani6300/mlapp
+      - name: Log in to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_LOGIN_SERVER }}
+          username: ${{ env.REGISTRY_USERNAME }}
+          password: ${{ env.REGISTRY_PASSWORD }}
+      - name: Docker tag Image
+        run: |
+           docker tag openaiapp:v1  ${{env.REGISTRY_LOGIN_SERVER }}/openaiapp:v1 
+           docker push ${{env.REGISTRY_LOGIN_SERVER }}/openaiapp:v1 
       - name: Build and push new image
         id: build-and-publish
         uses: docker/build-push-action@v5
         with:
-          context: ./bring_your_own_slm/src/phi-3-sidecar/Dockerfile/.
+          context: ./bring_your_own_slm/src/phi-3-sidecar/
+          file: ./bring_your_own_slm/src/phi-3-sidecar/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
